@@ -1,7 +1,7 @@
 import asyncio
 from typing import Self
 
-from protocols import GameProtocolTCP
+from base.protocols_base import GameProtocolTCP
 import logsetup
 
 logger = logsetup.setup_log(__name__)
