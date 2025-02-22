@@ -8,7 +8,7 @@ import socket
 from enum import Enum
 from typing import Callable
 
-from protocols import Decorators, GameProtocolUDP
+from base.protocols_base import Decorators, GameProtocolUDP
 import misc
 
 logger = logsetup.setup_log(__name__)

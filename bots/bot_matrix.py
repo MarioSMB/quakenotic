@@ -1,7 +1,5 @@
-import asyncio
-
 import logsetup
-from bot_base import BotBase
+from base.bot_base import BotBase
 
 logger = logsetup.setup_log(__name__)
 

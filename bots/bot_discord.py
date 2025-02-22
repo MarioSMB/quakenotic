@@ -1,10 +1,9 @@
-import asyncio
+from typing import Callable
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 
 import logsetup
-import protocols
 
 logger = logsetup.setup_log(__name__)  # for logging purposes
 
@@ -14,12 +13,11 @@ class Bot(discord.ext.commands.Bot):
     to_xonotic_format = "^xC00<DISCORD>^7:[{}]: {}"
     from_xonotic_format = "`{}`"
 
-    def __init__(self, *args, **kwargs):
-        self.token = kwargs['token'] if kwargs['token'] else None
-        super().__init__(*args, intents=discord.Intents(**kwargs.pop('intents')), **kwargs)
-        self.channels = kwargs['channels']
-        self.callback = kwargs['callback']
-
+    def __init__(self, *args, token: str = None, channels: list[int, ...], callback: Callable = None, intents: dict[str : int], **kwargs):
+        self.token = token
+        super().__init__(*args, intents=discord.Intents(**intents), **kwargs)
+        self.channels = channels
+        self.callback = callback
         self.setup_commands()
         return
 
