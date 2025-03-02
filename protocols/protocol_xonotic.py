@@ -136,13 +136,17 @@ class XonoticProtocol(GameProtocolUDP):
         :param kwargs: Further keyword args passed to parent of CustomProtocol inheritance-wise asyncio.DatagramProtocol
         """
         super().__init__(*args, **kwargs)
-        self.clients = [self.create_client(args['addr'], args['port'], args['passw']) for args in clients]
+        self.clients = [Client(args['addr'], args['port'], args['passw']) for args in clients]
         self.on_con_lost = on_con_lost
         self.callback = write_callback
         self.keepalive_timer = keepalive_timer
 
         self.transport = None
 
+        return
+
+    def __del__(self):
+        self.transport.close()
         return
 
     @property
@@ -157,15 +161,12 @@ class XonoticProtocol(GameProtocolUDP):
             [char if ord(char) < 0xE07F or ord(char) > 0xE0FF
              else self.LOOKUP_TABLE[ord(char) - 0xE000] for char in string])
 
-    def get_client(self, addr: tuple) -> Client:
+    def get_client(self, addr: tuple) -> Client | None:
         """Getter function for getting object representing the client by address."""
         for each in self.clients:
             if tuple([each.ip, each.port]) == addr:
                 return each
-        return False
-
-    def create_client(self, ip, port, passw) -> Client:
-        return Client(ip, port, passw)
+        return None
 
     def connection_made(self, transport):
         self.transport = transport

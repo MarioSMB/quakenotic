@@ -2,11 +2,8 @@ from typing import Callable
 
 import discord
 from discord.ext import commands
-
 import logsetup
-
 logger = logsetup.setup_log(__name__)  # for logging purposes
-
 
 class Bot(discord.ext.commands.Bot):
     max_message_length = 127

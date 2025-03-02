@@ -7,6 +7,7 @@ import importlib
 import platform
 
 from typing import Callable, Self
+from enum import Enum
 import logsetup
 
 logger = logsetup.setup_log(__name__)
@@ -20,7 +21,6 @@ def formatsyspath(filename: str) -> str:
             return "/" + filename
         case _:
             raise NotImplementedError("Unsupported system")
-
 
 class CallbackObject(object):
     """
@@ -267,35 +267,23 @@ class Handler(object):
     async def setup_relays(self):
         logger.info(self.identifier + "Setting up relays...")
         with open(os.path.dirname(os.path.realpath(sys.argv[0])) + formatsyspath("config/relays.yaml")) as file:
+
             relays = yaml.load(file, Loader=SafeLoaderPlusTuples)
 
-            for bot in relays:
-                if relays[bot]['active'] is not True:
-                    self.relays.update({bot: None})
-                    continue
-
-                package = importlib.import_module(relays[bot]['path'])
-                classname = getattr(package, relays[bot]['classname'])
-                relay = classname(*relays[bot]['args'], callback=CallbackObject(self.queue.put_notify), **relays[bot]['kwargs'])
-
-                self.relays.update({bot: Relay(
-                    self.queue,
-                    relay,
-                    relays[bot]['args'],
-                    relays[bot]['kwargs'],
-                    relays[bot]['run']['args'],
-                    relays[bot]['run']['kwargs']
-                )
-                })
-
+            for relay in relays:
+                if relays[relay]['active'] is not True:
+                    self.relays.update({relay: None})
+                else:
+                    conn = await self.create_connection(relays[relay]['type'], asyncio.Protocol,
+                                                        [], {}, [],
+                                                        {'host': relays[relay]['address'][0], 'port': relays[relay]['address'][1]})
+                    self.relays.update({relay: conn})
         return
 
     async def setup_shared_chats(self):
         logger.info(self.identifier + "Setting up shared chat pools...")
         if not self.connections or not self.relays:
-            logger.warning(
-                self.identifier
-                + "Called setup_shared_chats but connections or relays are empty")
+            logger.warning(self.identifier + "Called setup_shared_chats but connections or relays are empty")
             # only run if these are already set up due to dependency on previous setups
 
         with open(os.path.dirname(os.path.realpath(sys.argv[0])) + formatsyspath("config/sharedchats.yaml")) as file:
@@ -304,13 +292,9 @@ class Handler(object):
             for chat in shared:
                 relays, servers = shared[chat]['relays'], shared[chat]['servers']
                 self.sharedpool.update({chat: SharedChat(
-                    {self.servers[server]: self.get_conn(self.servers[server])
-                     for server in servers},
-                    {self.relays[relay].bot: relays[relay] for relay in relays}
-                )
-                })
-                pass
-
+                    {self.servers[server]: self.get_conn(self.servers[server]) for server in servers},
+                    {self.relays[relay]: relays[relay] for relay in relays}
+                )})
         return
 
     def get_conn(self, server: tuple[str, int]):
@@ -327,20 +311,6 @@ class Handler(object):
 
     async def setup_threads(self):
         logger.info(self.identifier + "Setting up threads...")
-        if not self.relays:
-            logger.warning(self.identifier + "Called setup_threads but relays are empty")
-
-        #for relay in self.relays:
-        #    await asyncio.create_task(self.relays[relay].bot.start())
-
-        self.threads.update({self.relays[relay].bot: ThreadLoop(target=self.relays[relay].bot.start,
-                                                            args=self.relays[relay].runargs,
-                                                            kwargs=self.relays[relay].runkwargs) for relay in
-                             self.relays})
-
-        for each in self.threads:
-            self.threads[each].start()
-
         return
 
     async def create_connection(self, socket_type: str, protocol: asyncio.Protocol,
@@ -370,6 +340,9 @@ class Handler(object):
 
                 case 'unix':
                     func = loop.create_unix_server
+
+                case 'pipe':
+                    raise NotImplementedError("This socket type is unsupported")
 
                 case _:
                     raise NotImplementedError("This socket type is unsupported")
