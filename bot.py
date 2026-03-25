@@ -109,6 +109,11 @@ class Bot(discord.ext.commands.Bot):
             await ctx.channel.send(":mushroom:")
             return
 
+        @self.command(name="silentstatus", description="Mr Mime.")
+        async def mime_status(ctx) -> None:
+            await ctx.channel.send(":raised_hand: :clown: :raised_back_of_hand:")
+            return
+
         # add further decorators and associated functions for more commands
         return
 
