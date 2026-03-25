@@ -332,7 +332,7 @@ class XonoticProtocol(GameProtocol):
         :return: None
         """
         logger.debug(self.identifier + "Sent rcon command " + command)
-        self.transport.sendto(self.construct(command))  # asynchronous
+        self.transport.sendto(self.construct(command.replace("\x00", "")))  # asynchronous
         return  # do we care about return value of an rcon?
 
     @GameProtocol.if_transport

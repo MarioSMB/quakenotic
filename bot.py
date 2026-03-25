@@ -104,6 +104,11 @@ class Bot(discord.ext.commands.Bot):
             await ctx.channel.send(":goat:")
             return
 
+        @self.command(name="mariostatus", description="Wahoo.")
+        async def mario_status(ctx) -> None:
+            await ctx.channel.send(":mushroom:")
+            return
+
         # add further decorators and associated functions for more commands
         return
 
