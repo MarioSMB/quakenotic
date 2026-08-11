@@ -114,6 +114,11 @@ class Bot(discord.ext.commands.Bot):
             await ctx.channel.send(":raised_hand: :clown: :raised_back_of_hand:")
             return
 
+        @self.command(name="muppetstatus", description="Bird Bird")
+        async def muppet_status(ctx) -> None:
+            await ctx.channel.send(":leftwards_hand: :eye:~ :lips: ~:eye: :rightwards_hand:")
+            return
+
         # add further decorators and associated functions for more commands
         return
 
